@@ -57,14 +57,19 @@ repointing `west.yml` at the fork.
 
 ## Current hardware layout
 
-- **Left half**: central, `mod_encoder_left`, `mod_battery_coincell`, ZMK Studio enabled.
+- **Dongle**: central, ZMK Studio enabled. Holds the keymap and presents USB HID.
+- **Left half**: peripheral, `mod_encoder_left`, `mod_battery_coincell`.
 - **Right half**: peripheral, `mod_display_epaper_forest`, `mod_battery_coincell`.
-- **No dongle.** The dongle variant is written out and commented in `build.yaml`.
-  If enabled, the dongle becomes central: both halves need
-  `-DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n` and Studio moves to the dongle.
 
-The encoder is on the **left** half (confirmed 2026-09-11). Unconfirmed: whether
-a dongle will be bought.
+Both halves carry `-DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n`. **Omitting it on a half is
+not a no-op that merely leaves it dongleless** — the half becomes a second central,
+advertises to hosts instead of joining the dongle, and so does nothing wirelessly
+while still working over USB (a central has its own HID output). That USB-works /
+wireless-doesn't split is the signature of this mistake; it cost an afternoon on
+2026-09-11.
+
+The encoder is on the **left** half (confirmed 2026-09-11). The dongleless variant
+is written out and commented in `build.yaml`.
 
 ## Build and verify
 
