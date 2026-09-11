@@ -1,18 +1,31 @@
 # This file generates the GitHub Actions matrix.
-# Add individual board + shield combinations to the `include` property. 
-# You can also use the `cmake-args` property to pass flags to the build command, 
-# `snippet` to add a Zephyr snippet, and `artifact-name` to assign a name to 
-# distinguish build outputs from each other:
-#
-# include:
-#   - board: halcyon_dongle//zmk
-#     shield: halcyon_kyria_dongle
-#     cmake-args: -DCONFIG_ZMK_STUDIO=y
-#     snippet: studio-rpc-usb-uart
-#   - board: halcyon_wireless//zmk
-#     shield: halcyon_kyria_left mod_battery_coincell mod_display_epaper
-#     cmake-args: -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
-#   - board: halcyon_wireless//zmk
-#     shield: halcyon_kyria_right mod_battery_coincell mod_encoder_right
-#
+# See https://github.com/splitkb/zmk-halcyon-config#how-to-configure-your-build-targets
 ---
+include:
+  # Left half: central, rotary encoder, coincell battery.
+  # Studio lives on the central half so keymap edits don't need a rebuild.
+  - board: halcyon_wireless//zmk
+    shield: halcyon_kyria_left mod_battery_coincell mod_encoder_left
+    cmake-args: -DCONFIG_ZMK_STUDIO=y
+    snippet: studio-rpc-usb-uart
+
+  # Right half: peripheral, epaper display, coincell battery.
+  # Swap forest -> mountain / cityscape for a different stock image.
+  - board: halcyon_wireless//zmk
+    shield: halcyon_kyria_right mod_battery_coincell mod_display_epaper_forest
+
+  # --- Dongle variant -------------------------------------------------------
+  # If you add a dongle, uncomment these three and comment out the two above.
+  # The dongle becomes central, so both halves need SPLIT_ROLE_CENTRAL=n and
+  # Studio moves to the dongle.
+  #
+  # - board: halcyon_dongle//zmk
+  #   shield: halcyon_kyria_dongle
+  #   cmake-args: -DCONFIG_ZMK_STUDIO=y
+  #   snippet: studio-rpc-usb-uart
+  # - board: halcyon_wireless//zmk
+  #   shield: halcyon_kyria_left mod_battery_coincell mod_encoder_left
+  #   cmake-args: -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
+  # - board: halcyon_wireless//zmk
+  #   shield: halcyon_kyria_right mod_battery_coincell mod_display_epaper_forest
+  #   cmake-args: -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n

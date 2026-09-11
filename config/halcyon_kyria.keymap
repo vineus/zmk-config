@@ -1,0 +1,120 @@
+/*
+ * Halcyon Kyria (rev4) — ported from the QMK vineus_hlc keymap.
+ * SPDX-License-Identifier: MIT
+ */
+
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/rgb.h>
+#include <dt-bindings/zmk/pointing.h>
+
+#define DEFAULT 0
+#define LOWER   1
+#define RAISE   2
+#define ADJUST  3
+
+// macOS shortcuts, carried over from the QMK aliases
+#define HYPER     LS(LC(LA(LGUI)))  // all four mods held, for Raycast/Karabiner bindings
+#define CPY_PORT  LG(LS(LC(N4)))    // copy portion of screen
+#define EMOJI     LG(LC(SPACE))
+#define CLIPBRD   LG(LS(V))
+
+// QMK ran TAPPING_TERM 100; ZMK's default is 200.
+&mt {
+    tapping-term-ms = <100>;
+};
+
+/ {
+    // ZMK has no inc_dec_ms; the generic sensor-rotate-var wraps &msc for us.
+    behaviors {
+        inc_dec_msc: sensor_rotate_mouse_scroll {
+            compatible = "zmk,behavior-sensor-rotate-var";
+            #sensor-binding-cells = <2>;
+            bindings = <&msc>, <&msc>;
+        };
+    };
+};
+
+/ {
+    // QMK never bound MO(_ADJUST), so that layer was unreachable. Lower+Raise
+    // now gets there, which is also the only way to reach the BT controls.
+    conditional_layers {
+        compatible = "zmk,conditional-layers";
+
+        adjust {
+            if-layers = <LOWER RAISE>;
+            then-layer = <ADJUST>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+
+        default_layer {
+            display-name = "QWERTY";
+// ,-------------------------------------------.                              ,-------------------------------------------.
+// |  Tab   |   Q  |   W  |   E  |   R  |   T  |                              |   Y  |   U  |   I  |   O  |   P  |  Bksp  |
+// |Esc/Shft|   A  |   S  |   D  |   F  |   G  |                              |   H  |   J  |   K  |   L  | ;  : | ' "/Sft|
+// | LCtrl  |   Z  |   X  |   C  |   V  |   B  | Left | Right|  |  Up  | Down |   N  |   M  | ,  < | .  > | /  ? | Enter  |
+//                        | Hyper| GUI  |Alt/Sft|Lower| Space|  | Space| Raise|Grv/Alt| Del | Emoji|
+            bindings = <
+&kp TAB       &kp Q &kp W &kp E     &kp R    &kp T                                                    &kp Y     &kp U    &kp I          &kp O    &kp P    &kp BSPC
+&mt LSHFT ESC &kp A &kp S &kp D     &kp F    &kp G                                                    &kp H     &kp J    &kp K          &kp L    &kp SEMI &mt LSHFT SQT
+&kp LCTRL     &kp Z &kp X &kp C     &kp V    &kp B          &kp LEFT  &kp RIGHT  &kp UP    &kp DOWN   &kp N     &kp M    &kp COMMA      &kp DOT  &kp FSLH &kp RET
+                          &kp HYPER &kp LGUI &mt LALT LSHFT &mo LOWER &kp SPACE  &kp SPACE &mo RAISE  &mt RALT GRAVE     &kp DEL        &kp EMOJI
+
+&kp CPY_PORT &none &none &none &none                                                                                     &none &none &none &none &none
+            >;
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+
+        lower_layer {
+            display-name = "Symbols";
+// ,-------------------------------------------.                              ,-------------------------------------------.
+// |   `    |  !   |  @   |  #   |  $   |  %   |                              |   ^  |  &   |  *   |  (   |   )  |        |
+// |        |      |      |      |      |      |                              |      |   _  |  +   |  {   |   }  |   |    |
+// |        |      |      |      | Clip |      |      |      |  |      |  Up  |      |      |      |      |      |        |
+//                        |      |      |      |      |      |  | Left | Down |Right |      |      |
+            bindings = <
+&kp GRAVE &kp EXCL &kp AT &kp HASH &kp DLLR   &kp PRCNT                                       &kp CARET &kp AMPS  &kp STAR  &kp LPAR  &kp RPAR &trans
+&trans    &trans   &trans &trans   &trans     &trans                                          &trans    &kp UNDER &kp PLUS  &kp LBRC  &kp RBRC &kp PIPE
+&trans    &trans   &trans &trans   &kp CLIPBRD &trans   &trans &trans     &trans   &kp UP     &trans    &trans    &trans    &trans    &trans   &trans
+                          &trans   &trans     &trans    &trans &trans     &kp LEFT &kp DOWN   &kp RIGHT &trans    &trans
+
+&kp C_MUTE &none &none &none &none                                                                      &none &none &none &none &none
+            >;
+            sensor-bindings = <&inc_dec_msc SCRL_RIGHT SCRL_LEFT &inc_dec_msc SCRL_RIGHT SCRL_LEFT &inc_dec_msc SCRL_RIGHT SCRL_LEFT &inc_dec_msc SCRL_RIGHT SCRL_LEFT>;
+        };
+
+        raise_layer {
+            display-name = "Numbers";
+// ,-------------------------------------------.                              ,-------------------------------------------.
+// |        |   1  |  2   |  3   |  4   |  5   |                              |  6   |  7   |  8   |  9   |  0   |        |
+// |        |      |      |      |      |      |                              |      |   -  |   =  |   [  |   ]  |   \    |
+            bindings = <
+&trans &kp N1 &kp N2 &kp N3 &kp N4 &kp N5                                 &kp N6 &kp N7    &kp N8    &kp N9   &kp N0   &trans
+&trans &trans &trans &trans &trans &trans                                 &trans &kp MINUS &kp EQUAL &kp LBKT &kp RBKT &kp BSLH
+&trans &trans &trans &trans &trans &trans &trans &trans     &trans &trans &trans &trans    &trans    &trans   &trans   &trans
+                     &trans &trans &trans &trans &trans     &trans &trans &trans &trans    &trans
+
+&kp C_MUTE &none &none &none &none                                               &none &none &none &none &none
+            >;
+            sensor-bindings = <&inc_dec_msc SCRL_UP SCRL_DOWN &inc_dec_msc SCRL_UP SCRL_DOWN &inc_dec_msc SCRL_UP SCRL_DOWN &inc_dec_msc SCRL_UP SCRL_DOWN>;
+        };
+
+        adjust_layer {
+            display-name = "Adjust";
+// Reached with Lower + Raise. Function keys, RGB underglow, Bluetooth, bootloader.
+            bindings = <
+&trans &kp F1          &kp F2          &kp F3          &kp F4          &kp F5                                          &kp F6       &kp F7       &kp F8       &kp F9    &kp F10 &trans
+&trans &rgb_ug RGB_TOG &rgb_ug RGB_SAI &rgb_ug RGB_HUI &rgb_ug RGB_BRI &rgb_ug RGB_EFF                                 &bt BT_SEL 0 &bt BT_SEL 1 &bt BT_SEL 2 &kp F11   &kp F12 &trans
+&trans &trans          &rgb_ug RGB_SAD &rgb_ug RGB_HUD &rgb_ug RGB_BRD &rgb_ug RGB_EFR &trans &trans   &trans &trans   &bt BT_SEL 3 &bt BT_SEL 4 &bt BT_CLR   &trans    &trans  &bootloader
+                                       &trans          &trans          &trans          &trans &trans   &trans &trans   &trans       &trans       &trans
+
+&none &none &none &none &none                                                                                          &none &none &none &none &none
+            >;
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+    };
+};
