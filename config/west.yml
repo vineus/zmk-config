@@ -2,6 +2,10 @@ manifest:
   remotes:
     - name: splitkb
       url-base: https://github.com/splitkb
+    # Fork of zmk-halcyon-module, carrying the custom vibetv epaper image.
+    # Rebase it onto splitkb/main when they move; see CLAUDE.md.
+    - name: vineus
+      url-base: https://github.com/vineus
     # Additional modules containing boards/shields/custom code can be listed here as well
     # See https://docs.zephyrproject.org/3.2.0/develop/west/manifest.html#projects
   projects:
@@ -10,7 +14,7 @@ manifest:
       revision: main+halcyon-fixes
       import: app/west.yml
     - name: zmk-halcyon-module
-      remote: splitkb
-      revision: main
+      remote: vineus
+      revision: feat/vibetv-epaper-image
   self:
     path: config
