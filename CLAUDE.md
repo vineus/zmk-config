@@ -51,15 +51,27 @@ Only three files are yours:
 The `config/*.json` files are physical layouts for ZMK Studio; `boards/shields/`
 is an empty hook for local shields. Neither normally needs touching.
 
-The only thing that would force a module fork is a **custom epaper image** — that
-means editing `widgets/art.c` and `peripheral_status.c` inside the shield, then
-repointing `west.yml` at the fork.
+The three **stock** epaper images — `mod_display_epaper_mountain` / `_forest` /
+`_cityscape` — are just shield names, so switching is a one-word `build.yaml` edit.
+`CONFIG_HALCYON_EPAPER_WIDGET_INVERTED=y` flips light/dark on any of them.
+
+A **custom** image is the one thing that would force a module fork. The art lives
+as LVGL bitmap arrays in the shield's `widgets/art.c`, and `peripheral_status.c`
+picks one at compile time via `#if IS_ENABLED(CONFIG_SHIELD_MOD_DISPLAY_EPAPER_*)`
+— there is no runtime hook and a config repo cannot add sources to someone else's
+shield. So it means forking `splitkb/zmk-halcyon-module`, adding the array plus a
+branch, and repointing `west.yml`. The shield's README documents the conversion:
+**164x88 PNG, pre-rotated 90 degrees CCW**, via LVGL's
+`LVGLImage.py --cf I1 --ofmt C`.
+
+To preview the stock images without a keyboard, decode them from `art.c`: I1
+format, stride 21, 8-byte palette header, stored rotated 90 CCW.
 
 ## Current hardware layout
 
 - **Dongle**: central, ZMK Studio enabled. Holds the keymap and presents USB HID.
 - **Left half**: peripheral, `mod_encoder_left`, `mod_battery_coincell`.
-- **Right half**: peripheral, `mod_display_epaper_forest`, `mod_battery_coincell`.
+- **Right half**: peripheral, `mod_display_epaper_mountain`, `mod_battery_coincell`.
 
 Both halves carry `-DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n`. **Omitting it on a half is
 not a no-op that merely leaves it dongleless** — the half becomes a second central,
