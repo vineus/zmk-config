@@ -40,10 +40,18 @@ Boards, shields and drivers come from `zmk-halcyon-module`, pulled in by
 `main+halcyon-fixes`, not upstream).
 
 **`west.yml` points the module at `vineus/zmk-halcyon-module`, a fork**, branch
-`feat/vibetv-epaper-image`. It carries exactly one change — the custom `vibetv`
-epaper image — and nothing else should accumulate there. Anything achievable from
-this repo belongs here, not in the fork. To drop the fork, point the module back
-at the `splitkb` remote @ `main` and pick a stock image in `build.yaml`.
+`feat/vibetv-epaper-image`. It carries two changes, one commit each so either can
+be dropped independently:
+
+1. the custom `vibetv` epaper image
+2. the battery percentage on the peripheral status bar
+
+Nothing else should accumulate there — anything achievable from this repo belongs
+here, not in the fork. To drop it entirely, point the module back at the `splitkb`
+remote @ `main` and pick a stock image in `build.yaml`.
+
+The revision is a **branch, not a SHA**, so force-pushing or rebasing that branch
+changes what CI builds. Rebase it when splitkb moves `main`.
 
 Only three files are yours:
 
