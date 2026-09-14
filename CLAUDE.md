@@ -35,9 +35,23 @@ Lower+Raise onto it.
 
 ## Architecture
 
-This is a **config repo only — do not create a ZMK module.** All boards, shields
-and drivers come from `splitkb/zmk-halcyon-module`, pulled in by `config/west.yml`
-(which also pins ZMK itself to `splitkb/zmk` @ `main+halcyon-fixes`, not upstream).
+Boards, shields and drivers come from `zmk-halcyon-module`, pulled in by
+`config/west.yml` (which also pins ZMK itself to `splitkb/zmk` @
+`main+halcyon-fixes`, not upstream).
+
+**`west.yml` points the module at `vineus/zmk-halcyon-module`, a fork**, branch
+`feat/vibetv-epaper-image`. It carries two changes, one commit each so either can
+be dropped independently:
+
+1. the custom `vibetv` epaper image
+2. the battery percentage on the peripheral status bar
+
+Nothing else should accumulate there — anything achievable from this repo belongs
+here, not in the fork. To drop it entirely, point the module back at the `splitkb`
+remote @ `main` and pick a stock image in `build.yaml`.
+
+The revision is a **branch, not a SHA**, so force-pushing or rebasing that branch
+changes what CI builds. Rebase it when splitkb moves `main`.
 
 Only three files are yours:
 
@@ -55,23 +69,39 @@ The three **stock** epaper images — `mod_display_epaper_mountain` / `_forest` 
 `_cityscape` — are just shield names, so switching is a one-word `build.yaml` edit.
 `CONFIG_HALCYON_EPAPER_WIDGET_INVERTED=y` flips light/dark on any of them.
 
-A **custom** image is the one thing that would force a module fork. The art lives
-as LVGL bitmap arrays in the shield's `widgets/art.c`, and `peripheral_status.c`
-picks one at compile time via `#if IS_ENABLED(CONFIG_SHIELD_MOD_DISPLAY_EPAPER_*)`
-— there is no runtime hook and a config repo cannot add sources to someone else's
-shield. So it means forking `splitkb/zmk-halcyon-module`, adding the array plus a
-branch, and repointing `west.yml`. The shield's README documents the conversion:
-**164x88 PNG, pre-rotated 90 degrees CCW**, via LVGL's
-`LVGLImage.py --cf I1 --ofmt C`.
+A **custom** image is why the fork exists. The art lives as LVGL bitmap arrays in
+the shield's `widgets/art.c`, and both `status.c` and `peripheral_status.c` pick
+one at compile time via `#if IS_ENABLED(CONFIG_SHIELD_MOD_DISPLAY_EPAPER_*)` —
+there is no runtime hook, and a config repo cannot add sources to a shield it does
+not own.
 
-To preview the stock images without a keyboard, decode them from `art.c`: I1
-format, stride 21, 8-byte palette header, stored rotated 90 CCW.
+Adding another custom image means touching **seven** files in the fork, all under
+`boards/shields/mod_display_epaper/`: the array and descriptor in `widgets/art.c`,
+a `def_bool $(shields_list_contains,...)` entry in `Kconfig.shield`, a `.conf` and
+a `.overlay` (copy any existing pair — the confs are identical and the overlay is
+a one-line include), a selection branch in **both** `widgets/status.c` and
+`widgets/peripheral_status.c`, and a `siblings:` entry in the `.zmk.yml`. Patching
+only `peripheral_status.c` works today because both halves are peripherals, but it
+silently breaks if a half ever becomes central.
+
+**Image format** — 164x88, `LV_COLOR_FORMAT_I1`, stride 21, an 8-byte palette
+header (black, white; swapped under `CONFIG_HALCYON_EPAPER_WIDGET_INVERTED`), then
+1848 bytes of packed bits, MSB first. Stored **rotated 90 degrees CCW** from what
+the panel shows, so design at 88x164 portrait and rotate on the way in. The shield
+README suggests LVGL's `LVGLImage.py`, but the format is simple enough to emit
+directly — and doing so lets you round-trip the result back to a PNG to verify it
+before ever flashing.
+
+**Converting art** for a 1-bit 88x164 panel: unsharp-mask *before* downscaling,
+then a plain threshold around 45%. Sharpening first keeps the thin white gaps
+between black shapes from closing up. Floyd-Steinberg dithering is worse than
+thresholding here — it adds noise where line art wants flat areas.
 
 ## Current hardware layout
 
 - **Dongle**: central, ZMK Studio enabled. Holds the keymap and presents USB HID.
 - **Left half**: peripheral, `mod_encoder_left`, `mod_battery_coincell`.
-- **Right half**: peripheral, `mod_display_epaper_mountain`, `mod_battery_coincell`.
+- **Right half**: peripheral, `mod_display_epaper_vibetv`, `mod_battery_coincell`.
 
 Both halves carry `-DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n`. **Omitting it on a half is
 not a no-op that merely leaves it dongleless** — the half becomes a second central,
