@@ -15,9 +15,10 @@ include:
     cmake-args: -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
 
   # Right half: peripheral, epaper display, coincell battery.
-  # Swap forest -> mountain / cityscape for a different stock image.
+  # Stock images: mountain / forest / cityscape. Selected purely by shield
+  # name; a custom image would mean forking the module (see CLAUDE.md).
   - board: halcyon_wireless//zmk
-    shield: halcyon_kyria_right mod_battery_coincell mod_display_epaper_forest
+    shield: halcyon_kyria_right mod_battery_coincell mod_display_epaper_mountain
     cmake-args: -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
 
   # --- Dongleless variant ---------------------------------------------------
@@ -30,4 +31,4 @@ include:
   #   cmake-args: -DCONFIG_ZMK_STUDIO=y
   #   snippet: studio-rpc-usb-uart
   # - board: halcyon_wireless//zmk
-  #   shield: halcyon_kyria_right mod_battery_coincell mod_display_epaper_forest
+  #   shield: halcyon_kyria_right mod_battery_coincell mod_display_epaper_mountain
